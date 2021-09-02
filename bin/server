@@ -1,0 +1,32 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+raise "#{$PROGRAM_NAME} does not take arguments" if ARGV.any?
+
+require 'bundler/setup'
+
+require 'pathname'
+
+require 'puma'
+require 'puma/configuration'
+
+configuration =
+  Puma::Configuration.new do |config|
+    # Heroku recommends setting min and max threads to be equal.
+    # See https://devcenter.heroku.com/articles/deploying-rails-applications-with-the-puma-web-server
+    config.threads 16, 16
+
+    config.bind format(
+      'tcp://%<host>s:%<port>s',
+      host: Puma::Configuration::DefaultTCPHost,
+      port: ENV.fetch('PORT', '5000')
+    )
+
+    config.app(
+      lambda do |_env|
+        [200, {}, ['Hello world!']]
+      end
+    )
+  end
+
+Puma::Launcher.new(configuration).run
